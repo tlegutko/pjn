@@ -14,8 +14,17 @@ object EasyIO {
   def readLinesFromUTF8File(fileName: String): List[String] = {
     Source.fromFile(fileName).getLines().toList
   }
+
   def readLinesFromISO8859File(fileName: String): List[String] = {
     import scala.collection.JavaConversions._
     Files.readLines(new File(fileName), Charset.forName("ISO-8859-2")).toList
+  }
+
+  def readLinesFromUTF8FileWithPrefix(fileName: String): List[String] = {
+    readLinesFromISO8859File(resourcesPrefix + fileName)
+  }
+
+  def readLinesFromISO8859FileWithPrefix(fileName: String): List[String] = {
+    readLinesFromISO8859File(resourcesPrefix + fileName)
   }
 }

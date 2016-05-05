@@ -82,3 +82,6 @@ fabric.properties
 ### Intellij Patch ###
 *.iml
 
+## agh dictionary lib
+/src/main/resources/wierzba/
+

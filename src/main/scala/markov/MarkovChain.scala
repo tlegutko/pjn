@@ -18,7 +18,7 @@ class MarkovChain(nGrams: Seq[NGram]) {
     generate(
       length,
       endCondition = (text, triesLeft) => triesLeft <= 0 && text.endsWith("."),
-      startingKeyProvider = sentenceStartingNGrams(Random.nextInt(sentenceStartingNGrams.length)),
+      startingKeyProvider = () => sentenceStartingNGrams(Random.nextInt(sentenceStartingNGrams.length)),
       separator = " "
     )
   }
@@ -27,26 +27,30 @@ class MarkovChain(nGrams: Seq[NGram]) {
     generate(
       length,
       endCondition = (_, triesLeft) => triesLeft == 0,
-      startingKeyProvider = ngramStats.keys.toVector(Random.nextInt(ngramStats.keySet.size)),
+      startingKeyProvider = () => ngramStats.keys.toVector(Random.nextInt(ngramStats.keySet.size)),
       separator = ""
     )
   }
 
-  private def generate(length: Int, endCondition: (String, Int) => Boolean, startingKeyProvider: NGram, separator: String): String = {
+  private def generate(length: Int, endCondition: (String, Int) => Boolean, startingKeyProvider: () => NGram, separator: String): String = {
     @tailrec
     def doGenerate(key: NGram, currentChain: String, triesLeft: Int): String = {
       if (endCondition(currentChain, triesLeft)) currentChain
       else {
-        val value = ngramStats.get(key).map(list => list(Random.nextInt(list.length)))
-        if (value.isDefined) doGenerate(value.get, currentChain + separator + value.get.last, triesLeft - 1)
-        else {
-          // markov chain ended too early
-          val value = startingKeyProvider
-          doGenerate(value, currentChain + ". " + value, triesLeft - 1)
+        val (newValue, valueToPrint) = ngramStats.get(key) match {
+          case Some(list) => {
+            val newValue = list(Random.nextInt(list.length))
+            (newValue, newValue.last)
+          }
+          case None => {
+            val newValue = startingKeyProvider()
+            (newValue, newValue.str)
+          }
         }
+        doGenerate(newValue, currentChain + separator + valueToPrint, triesLeft - 1)
       }
     }
-    val chainStart = startingKeyProvider
+    val chainStart = startingKeyProvider()
     doGenerate(chainStart, chainStart.str, length)
   }
 }

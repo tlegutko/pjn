@@ -22,13 +22,13 @@ object WordCounter {
     }
     val words = EasyIO.readLinesFromUTF8File(inputFile).flatMap(_.replaceAll("[\\s.,-;:()!?\"\'`]+", " ").split(" ").filterNot(_ == " "))
     val basicWords = words.map(word => dictionary.getOrElse(word, word))
-    val sortedwordCount = basicWords.foldLeft(Map.empty[String, Int]) {
+    val sortedWordCount = basicWords.foldLeft(Map.empty[String, Int]) {
       (count, word) => count + (word -> (count.getOrElse(word, 0) + 1))
     }.toList.sortWith(_._2 > _._2).tail
     println("Num of words: " + words.length)
-    println("Hapax legomena: " + sortedwordCount.count(_._2 == 1))
-    println("Num of words to fill half of text: " + find50p(sortedwordCount, words.length))
-    saveStatsToFile(wordCountFile, sortedwordCount)
+    println("Hapax legomena: " + sortedWordCount.count(_._2 == 1))
+    println("Num of words to fill half of text: " + find50p(sortedWordCount, words.length))
+    saveStatsToFile(wordCountFile, sortedWordCount)
 
 //    saveStatsToFile(diGramStatsFile, createNGramStatistics(2, words).toList.sortWith(_._2 > _._2))
 //    saveStatsToFile(triGramStatsFile, createNGramStatistics(3, words).toList.sortWith(_._2 > _._2))
