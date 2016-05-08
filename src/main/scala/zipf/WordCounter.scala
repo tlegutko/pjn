@@ -13,7 +13,7 @@ object WordCounter {
   val triGramStatsFile = EasyIO.resourcesPrefix + "zipf/triGram.txt"
 
   def main(args: Array[String]): Unit = {
-    val lines = EasyIO.readLinesFromISO8859File(dictionaryFile)
+    val lines = EasyIO.readLinesFromISO88592File(dictionaryFile)
     val dictionary = lines.foldLeft(Map.empty[String, String]) {
       (dict, line) => {
         val words = line.split(", ")

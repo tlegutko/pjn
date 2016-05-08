@@ -1,4 +1,4 @@
-package vectors;
+package wierzba;
 
 import com.sun.jna.Library;
 import com.sun.jna.Memory;
@@ -63,6 +63,27 @@ public class DictionaryCLP {
         void clp_orec(String inp, Pointer out, IntByReference num);
     }
 
+    public enum WordType {
+        RZECZOWNIK,
+        CZASOWNIK,
+        PRZYMIOTNIK,
+        LICZEBNIK,
+        ZAIMEK,
+        PRZYSLOWEK,
+        WYKRZYKNIK,
+        PRZYIMEK,
+        SPOJNIK,
+        NIEODMIENNY,
+        SKROT;
+
+        public static final WordType values[] = values();
+
+        /** Index starting from 1, as in CLP lib. */
+        public static WordType fromInt(int index) {
+            return values[index-1];
+        }
+    }
+
     public String clp_ver() {
         Pointer ptr = allocateCharArray();
         libInstance.clp_ver(ptr);
@@ -80,8 +101,8 @@ public class DictionaryCLP {
         return pointersToListOfInts(out, size);
     }
 
-    public int clp_pos(int id) {
-        return libInstance.clp_pos(id);
+    public WordType clp_pos(int id) {
+        return WordType.fromInt(libInstance.clp_pos(id));
     }
 
     public List<String> clp_formv(int id) {
@@ -151,7 +172,7 @@ public class DictionaryCLP {
     }
 
     private Pointer allocateIntArray() {
-        return new Memory(10 * Native.getNativeSize(Integer.TYPE));
+        return new Memory(20 * Native.getNativeSize(Integer.TYPE));
     }
 
     private Pointer allocateCharArray() {
@@ -171,16 +192,17 @@ public class DictionaryCLP {
 
     public static void main(String[] args) {
         DictionaryCLP dictionaryCLP = new DictionaryCLP();
+        int kluczId = 17240752;
         System.out.println("BASIC CLP TESTING:");
         System.out.println("ver: " + dictionaryCLP.clp_ver());
         System.out.println("all entries num: " + dictionaryCLP.clp_stat(0));
         System.out.println("multiple ids: " + dictionaryCLP.clp_rec("klucz"));
-        System.out.println("pos: " + dictionaryCLP.clp_pos(17240752));
-        System.out.println("label: " + dictionaryCLP.clp_label(17240752));
-        System.out.println("basic forms: " + dictionaryCLP.clp_bform(17240752));
-        System.out.println("all distinct forms: " + dictionaryCLP.clp_forms(17240752));
-        System.out.println("all forms: " + dictionaryCLP.clp_formv(17240752));
-        System.out.println("positions in vector" + dictionaryCLP.clp_vec(17240752, "klucze"));
+        System.out.println("pos: " + dictionaryCLP.clp_pos(kluczId));
+        System.out.println("label: " + dictionaryCLP.clp_label(kluczId));
+        System.out.println("basic forms: " + dictionaryCLP.clp_bform(kluczId));
+        System.out.println("all distinct forms: " + dictionaryCLP.clp_forms(kluczId));
+        System.out.println("all forms: " + dictionaryCLP.clp_formv(kluczId));
+        System.out.println("positions in vector" + dictionaryCLP.clp_vec(kluczId, "klucze"));
         System.out.println("plain: " + dictionaryCLP.clp_plain("ęąęówźż"));
         System.out.println("ogonki: " + dictionaryCLP.clp_ogonki("ta"));
 
