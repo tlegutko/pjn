@@ -6,13 +6,13 @@ import wierzba.DictionaryCLP
 import scala.collection.immutable.TreeMap
 
 object MatrixGenerator {
+
   def main(args: Array[String]): Unit = {
     EasyIO.executeAndDisplayElapsedTime({
-      val fileName = "vectors/out/malepapTFIDF.txt"
-      val documents = EasyIO.readPAPNotesDepunctuated()
-      val matrix = createTFIDFMatrix(new DictionaryCLP, documents)
-      saveMatrixToFile(fileName, matrix)
-    }, "parsed PAP, created tf-idf matrix and saved it to file")
+      val documents = EasyIO.readPAPNotesDepunctuated(VectorsFiles.pap)
+      val matrix = createTFIDFMatrix(new DictionaryCLP(VectorsFiles.clpLibDir), documents)
+      saveMatrixToFile(VectorsFiles.matrixTFIDF, matrix)
+    }, "parsing PAP, creating tf-idf matrix and saving it to file")
   }
 
   import collection.JavaConverters._
@@ -26,6 +26,7 @@ object MatrixGenerator {
     val terms = documentsToTerms(dictionaryCLP, documents)
     val documentFrequency = calculateDocumentFrequency(documentsOfTerms.map(_.toSet), terms)
     val numOfDocuments = documents.length
+
     documentsOfTerms.indices.foldLeft(TreeMap.empty[(Int, String), Double]) { (acc, i) =>
       val wordOccurencesInDocument = countWordOccurences(documentsOfTerms(i))
       val newMap = wordOccurencesInDocument.map { case (term, occurences) =>
@@ -35,11 +36,32 @@ object MatrixGenerator {
     }
   }
 
+  def readDocumentsWithKeywordsFromFile(fileName: String): Map[Int, Map[String, Double]] = {
+    matrixToKeywords(readMatrixFromFile(fileName))
+  }
+
+  def matrixToKeywords(matrix: Seq[(Int, String, Double)], numOfKeywords: Int = 10): Map[Int, Map[String, Double]] = {
+    val documents = matrix.groupBy(_._1)
+    documents.mapValues {
+      _.map(doc => (doc._2, doc._3))
+        .toMap
+    }
+  }
+
   def saveMatrixToFile(fileName: String, matrix: TreeMap[(Int, String), Double]) = {
     def printingFun(seq: ((Int, String), Double)): String = seq match {
       case ((docId, term), metric) => s"$docId, $term, $metric"
     }
     EasyIO.saveToFileWithPrefix(fileName, matrix.toSeq, printingFun)
+  }
+
+  def readMatrixFromFile(fileName: String): Seq[(Int, String, Double)] = {
+    def readingFun(line: String): (Int, String, Double) = {
+      line.split(", ").toList match {
+        case docId :: term :: metric :: Nil => (docId.toInt, term, metric.toDouble)
+      }
+    }
+    EasyIO.readFileWithPrefix(fileName, readingFun)
   }
 
   def TFIDFMetric(tf: Int, N: Int, df: Int): Double =

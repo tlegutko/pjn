@@ -28,44 +28,50 @@ object EasyIO {
     readLinesFromISO88592File(resourcesPrefix + fileName)
   }
 
-  def readPAPNotes(): Seq[String] = {
-    readLinesFromUTF8FileWithPrefix("markov/pap.txt")
+  def readPAPNotes(fileName: String): Seq[String] = {
+    readLinesFromUTF8FileWithPrefix(fileName)
       .mkString(" ")
-      .split("#\\d*")
+      .split("#\\d{6}")
       .map(_.replaceAll("\\s+", " "))
   }
 
-  def readPAPNotesDepunctuated(): Seq[String] = {
-    readLinesFromUTF8FileWithPrefix("markov/malepap.txt")
+  def readPAPNotesDepunctuated(fileName: String): Seq[String] = {
+    readLinesFromUTF8FileWithPrefix(fileName)
       .mkString(" ")
-      .split("#\\d*")
+      .split("#\\d{6}")
       .map(_.replaceAll("[\\s.,-;:()!?\"\'`]+", " "))
-      .filterNot(_.isEmpty)
       .map(_.toLowerCase)
   }
 
   def executeAndDisplayElapsedTime[T](f: => T, msg: String): T = {
-    def printlnTime(timeDiffSec: Double): Unit = {
+    def doubleToDisplayedTime(timeDiffSec: Double): String = {
       val minutes = Math.floorDiv(timeDiffSec.toInt, 60)
       val secondFraction = timeDiffSec - timeDiffSec.floor
       val seconds = Math.floorMod(timeDiffSec.toInt, 60) + secondFraction
-      println(f"$msg in ${minutes}m$seconds%.3fs")
+      f"${minutes}m$seconds%.3fs"
     }
+    println(s"started $msg...")
     val statsStart = System.currentTimeMillis()
-    val res = f
+    val result = f
     val timeDiffSec = (System.currentTimeMillis() - statsStart) / 1000.0
-    printlnTime(timeDiffSec)
-    res
+    val executionTime = doubleToDisplayedTime(timeDiffSec)
+    println(s"finished $msg in $executionTime")
+    result
   }
 
-  def saveToFileWithPrefix[T](fileName: String, elemsToSave: Seq[T], projection: T => String) = {
+  def saveToFileWithPrefix[T](fileName: String, elemsToSave: Seq[T], lineProjection: T => String) = {
     import java.io._
     val p = new PrintWriter(new File(resourcesPrefix + fileName))
     try {
-      elemsToSave.foreach(elem => p.println(projection(elem)))
+      elemsToSave.foreach(elem => p.println(lineProjection(elem)))
     } finally {
       p.close()
     }
+  }
+
+  def readFileWithPrefix[T](fileName: String, lineProjection: String => T): Seq[T] = {
+    val lines = readLinesFromUTF8FileWithPrefix(fileName)
+    lines.map(lineProjection)
   }
 
 }

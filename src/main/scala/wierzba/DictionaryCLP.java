@@ -27,7 +27,7 @@ public class DictionaryCLP {
         libInstance.clp_init(1); // utf-8, 0 for ISO-8859-2
     }
 
-    public DictionaryCLP() {
+    private DictionaryCLP() {
         this("src/main/resources/wierzba");
     }
 
