@@ -83,8 +83,8 @@ fabric.properties
 *.iml
 
 ## agh CLP lib
-/src/main/resources/wierzba/
+/src/main/resources/pjn/wierzba/
 
 ## outputs of programs
-/src/main/resources/*/out/
+/src/main/resources/pjn/*/out/
 

@@ -1,6 +1,6 @@
-package markov
+package pjn.markov
 
-import ngrams.NGram
+import pjn.ngrams.NGram
 
 import scala.annotation.tailrec
 import scala.util.Random

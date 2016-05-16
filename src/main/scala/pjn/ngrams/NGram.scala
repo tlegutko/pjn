@@ -1,4 +1,4 @@
-package ngrams
+package pjn.ngrams
 
 sealed trait NGram {
   val str: String

@@ -1,10 +1,10 @@
-package markov
+package pjn.markov
 
-import io.EasyIO
-import ngrams.SentenceNGram
+import pjn.ngrams.SentenceNGram
+import pjn.io.EasyIO
 
 object PressNotesGeneratorMain {
-  val sourceFile = "src/main/resources/markov/pap.txt"
+  val sourceFile = "src/main/resources/pjn.markov/pap.txt"
 
   def main(args: Array[String]) = {
     val texts = EasyIO.readLinesFromUTF8File(sourceFile).mkString(" ").split("#\\d*").map(_.replaceAll("\\s+", " "))

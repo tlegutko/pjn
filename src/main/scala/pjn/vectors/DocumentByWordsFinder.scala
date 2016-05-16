@@ -1,6 +1,6 @@
-package vectors
+package pjn.vectors
 
-import io.EasyIO
+import pjn.io.EasyIO
 
 import scala.io.StdIn
 

@@ -1,4 +1,4 @@
-package wierzba;
+package pjn.wierzba;
 
 import com.sun.jna.Library;
 import com.sun.jna.Memory;
@@ -28,7 +28,7 @@ public class DictionaryCLP {
     }
 
     private DictionaryCLP() {
-        this("src/main/resources/wierzba");
+        this("src/main/resources/pjn.wierzba");
     }
 
     private interface CLibraryCLP extends Library {

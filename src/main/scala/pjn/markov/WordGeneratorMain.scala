@@ -1,12 +1,12 @@
-package markov
+package pjn.markov
 
-import io.EasyIO
-import ngrams.WordNGram
+import pjn.ngrams.WordNGram
+import pjn.io.EasyIO
 
 import scala.util.Random
 
 object WordGeneratorMain {
-  val sourceFile = "src/main/resources/markov/srednie2pap.txt"
+  val sourceFile = "src/main/resources/pjn.markov/srednie2pap.txt"
 
   def main(args: Array[String]) = {
     val texts = EasyIO

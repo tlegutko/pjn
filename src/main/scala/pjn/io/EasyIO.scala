@@ -1,4 +1,4 @@
-package io
+package pjn.io
 
 import java.io.File
 import java.nio.charset.Charset
@@ -9,7 +9,7 @@ import scala.io.Source
 
 object EasyIO {
 
-  val resourcesPrefix = "src/main/resources/"
+  val resourcesPrefix = "src/main/resources/pjn/"
 
   def readLinesFromUTF8File(fileName: String): List[String] = {
     Source.fromFile(fileName).getLines().toList

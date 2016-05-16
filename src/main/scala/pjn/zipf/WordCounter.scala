@@ -1,6 +1,6 @@
-package zipf
+package pjn.zipf
 
-import io.EasyIO
+import pjn.io.EasyIO
 
 import scala.annotation.tailrec
 
