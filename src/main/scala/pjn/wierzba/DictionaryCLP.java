@@ -15,7 +15,7 @@ public class DictionaryCLP {
     private final CLibraryCLP libInstance;
 
     /**
-     * Creates java facade for C library CLP.
+     * Creates Java facade for C library CLP.
      * Remember about magic lp1a26.db and lp1b26.db files required in your /usr/local/clp/db directory.
      * And remember to have JNA dependency in your classpath.
      *
@@ -27,8 +27,8 @@ public class DictionaryCLP {
         libInstance.clp_init(1); // utf-8, 0 for ISO-8859-2
     }
 
-    private DictionaryCLP() {
-        this("src/main/resources/pjn.wierzba");
+    DictionaryCLP() {
+        this("src/main/resources/pjn/wierzba");
     }
 
     private interface CLibraryCLP extends Library {
