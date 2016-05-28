@@ -1,40 +1,75 @@
 package pjn.lsalsd
 
-import org.apache.log4j.{Level, LogManager}
-import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.distributed.RowMatrix
 import org.apache.spark.{SparkConf, SparkContext}
+import pjn.io.EasyIO
+import pjn.spark.MySpark
+import pjn.vectors.{MatrixGenerator, VectorsFiles}
 
 object SparkLSAGenerator {
-
-  val NumOfTopics = 10
+  val NumOfTopics = 50
 
   def main(args: Array[String]) {
-    val sparkConf = new SparkConf().setAppName("SparkLSAGenerator")
-    val sc = new SparkContext(sparkConf)
-    LogManager.getRootLogger.setLevel(Level.WARN)
-    val tdMatrixFromFile = sc.textFile(LsaLsdFiles.termDocMatrix).cache()
-    val vector = tdMatrixFromFile.map { line =>
-      val values = lineToSeq(line)
-      Vectors.sparse(values.length, values)
-    }
-    val matrix = new RowMatrix(vector)
-    val svd = matrix.computeSVD(NumOfTopics, computeU = true)
-    val docs = svd.U
-    val topics = svd.s
-    val terms = svd.V
-    println(docs)
+    val sc = new SparkContext(new SparkConf().setAppName("SparkLSAGenerator"))
+
+    val matrixFromFile = MatrixGenerator.readMatrixFromFile(VectorsFiles.matrixTFIDF)
+    val matrixTranslator = new MatrixTranslator(matrixFromFile)
+    val matrix = new RowMatrix(matrixTranslator.getRDDVectors(sc))
+
+    val svd = EasyIO.executeAndDisplayElapsedTime(
+      matrix.computeSVD(NumOfTopics, computeU = true),
+      "calculating SVD")
+    val topTerms = matrixTranslator.topTermsPerTopics(svd, 10)
+    saveToFile(LsaLdaFiles.lsaFile + 2, topTerms)
   }
 
-  def lineToSeq(line: String): Seq[(Int, Double)] = {
-    def strPairToPair(s: String): (Int, Double) = {
-      val regPair = """\((\d+),(\d+\.\d+)\)""".r
-      s match {
-        case regPair(id, value) => (id.toInt, value.toDouble)
+  def saveToFile(fileName: String, seq: Seq[Array[(String, Double)]]): Unit = {
+    def projection(line: Array[(String, Double)]): String = line.mkString("; ")
+    EasyIO.saveToFileWithPrefix(fileName, seq, projection)
+  }
+
+}
+
+object SparkTopicsPerDoc {
+  val NumOfTopics = 300
+
+  def main(args: Array[String]) {
+    val sc = MySpark.createSparkContext()
+
+    val matrixFromFile = MatrixGenerator.readMatrixFromFile(VectorsFiles.matrixTFIDF)
+    val matrixTranslator = new MatrixTranslator(matrixFromFile)
+    val matrix = new RowMatrix(matrixTranslator.getRDDVectors(sc))
+
+    val papText = EasyIO.readPAPNotes(VectorsFiles.pap)
+
+    val svd = EasyIO.executeAndDisplayElapsedTime(
+      matrix.computeSVD(NumOfTopics, computeU = true),
+      "calculating SVD")
+
+    val topTerms = matrixTranslator.topTermsPerTopics(svd, 10)
+
+    val docsWithTopics = svd.U.rows.zipWithIndex().map{ case (vector, id) =>
+      val topicsPerDoc = vector.toArray.zipWithIndex.sortBy(-_._1).take(3).map {
+        case (value, index) => (value, topTerms(index))
+      }
+      (id.toInt+1, papText(id.toInt+1), topicsPerDoc)
+    }.collect().sortBy(_._1)
+
+    saveToFile(LsaLdaFiles.topicsPerDocLSA, docsWithTopics)
+
+  }
+
+  def saveToFile(file: String, seq: Array[(Int, String, Array[(Double, Array[(String, Double)])])]): Unit = {
+    def projection(s: (Int, String, Array[(Double, Array[(String, Double)])])): String = {
+      s match { case (ind, text, metric) =>
+        val index = f"#$ind%06d"
+        val topics = metric.map { case (value, termArr) =>
+          s"$value ${termArr.mkString(", ")}"
+        }.mkString("\n")
+        s"$index\n$topics\n$text"
       }
     }
-    line.split("; ").map(strPairToPair(_))
+    EasyIO.saveToFileWithPrefix(file, seq, projection)
   }
-
 
 }

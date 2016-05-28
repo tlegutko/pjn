@@ -54,7 +54,7 @@ object MatrixGenerator {
       val newMap = wordOccurencesInDocument.map { case (term, occurences) =>
         (i, term) -> metricFun(occurences, numOfDocuments, documentFrequency(term))
       }
-      val filteredNewMap = newMap.filterKeys{case (_, term) =>
+      val filteredNewMap = newMap.filterKeys { case (_, term) =>
         filterFun(wordOccurencesInDocument(term), numOfDocuments, documentFrequency(term))
       }
       acc ++ filteredNewMap
@@ -69,15 +69,16 @@ object MatrixGenerator {
           .toMap
       }
     }
-    def readMatrixFromFile(fileName: String): Seq[(Int, String, Double)] = {
-      def readingFun(line: String): (Int, String, Double) = {
-        line.split(", ") match {
-          case Array(docId, term, metric) => (docId.toInt, term, metric.toDouble)
-        }
-      }
-      EasyIO.readFileWithPrefix(fileName, readingFun)
-    }
     matrixToKeywords(readMatrixFromFile(fileName))
+  }
+
+  def readMatrixFromFile(fileName: String): Seq[(Int, String, Double)] = {
+    def readingFun(line: String): (Int, String, Double) = {
+      line.split(", ") match {
+        case Array(docId, term, metric) => (docId.toInt, term, metric.toDouble)
+      }
+    }
+    EasyIO.readFileWithPrefix(fileName, readingFun)
   }
 
 

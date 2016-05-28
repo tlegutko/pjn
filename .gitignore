@@ -88,3 +88,6 @@ fabric.properties
 ## outputs of programs
 /src/main/resources/pjn/*/out/
 
+# spark metadata
+metastore_db/
+
