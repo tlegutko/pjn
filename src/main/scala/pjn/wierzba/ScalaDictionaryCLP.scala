@@ -1,5 +1,7 @@
 package pjn.wierzba
 
+import pjn.wierzba.DictionaryCLP.WordType
+
 import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 
@@ -8,7 +10,9 @@ class ScalaDictionaryCLP {
 
   def indicesOfWord(word: String): List[Int] = javaDictionaryCLP.clp_rec(word)
 
+  def wordType(id: Int): WordType = javaDictionaryCLP.clp_pos(id)
 
+  def baseForm(id: Int): List[String] = javaDictionaryCLP.clp_bform(id)
 
   private implicit def javaListOfStringToScala(l: java.util.List[String]): List[String] = l.asScala.toList
 
