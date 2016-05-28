@@ -28,14 +28,14 @@ object EasyIO {
     readLinesFromISO88592File(resourcesPrefix + fileName)
   }
 
-  def readPAPNotes(fileName: String): Seq[String] = {
+  def readPAPNotes(fileName: String): IndexedSeq[String] = {
     readLinesFromUTF8FileWithPrefix(fileName)
       .mkString(" ")
       .split("#\\d{6}")
       .map(_.replaceAll("\\s+", " "))
   }
 
-  def readPAPNotesDepunctuated(fileName: String): Seq[String] = {
+  def readPAPNotesDepunctuated(fileName: String): IndexedSeq[String] = {
     readLinesFromUTF8FileWithPrefix(fileName)
       .mkString(" ")
       .split("#\\d{6}")
@@ -60,10 +60,12 @@ object EasyIO {
     result
   }
 
-  def saveToFileWithPrefix[T](fileName: String, elemsToSave: Seq[T], lineProjection: T => String) = {
+  def saveToFileWithPrefix[T](fileName: String, elemsToSave: Seq[T], lineProjection: T => String, header: String = "") = {
     import java.io._
     val p = new PrintWriter(new File(resourcesPrefix + fileName))
     try {
+      if (!header.isEmpty)
+        p.println(header)
       elemsToSave.foreach(elem => p.println(lineProjection(elem)))
     } finally {
       p.close()
@@ -74,5 +76,7 @@ object EasyIO {
     val lines = readLinesFromUTF8FileWithPrefix(fileName)
     lines.map(lineProjection)
   }
+
+  def papNumber(id: Int): String = f"#$id%06d"
 
 }

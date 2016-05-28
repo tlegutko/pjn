@@ -8,8 +8,7 @@ import scala.annotation.tailrec
 object GraphGenerator {
   def main(args: Array[String]) {
     val text = EasyIO.readPAPNotesDepunctuated(VectorsFiles.pap)
-    val docsOfWords = text.map(_.split(" ").filterNot(_.isEmpty)).filterNot(_.isEmpty)
-    val filteredText = filterStopWords(docsOfWords)
+    val filteredText = preprocessCorpus(text)
     for (k <- 0 to 4) {
       EasyIO.executeAndDisplayElapsedTime({
         val graph = createGraph(filteredText, k)
@@ -18,7 +17,12 @@ object GraphGenerator {
     }
   }
 
-  def filterStopWords(seq: Seq[Array[String]]): Seq[Array[String]] = {
+  def preprocessCorpus(text: IndexedSeq[String]): IndexedSeq[Array[String]] = {
+    val docsOfWords = text.map(_.split(" ").filterNot(_.isEmpty)).filterNot(_.isEmpty)
+    filterStopWords(docsOfWords)
+  }
+
+  def filterStopWords(seq: IndexedSeq[Array[String]]): IndexedSeq[Array[String]] = {
     val wordCount = seq.flatten.foldLeft(Map.empty[String, Int]) { (acc, word) =>
       acc + (word -> (acc.getOrElse(word, 0) + 1))
     }
@@ -27,7 +31,7 @@ object GraphGenerator {
     seq.map(_.filterNot(word => topWords.contains(word) || bottomWords.contains(word)))
   }
 
-  def createGraph(docsOfWords: Seq[Array[String]], k: Int): Seq[Map[(String, String), Int]] = {
+  def createGraph(docsOfWords: IndexedSeq[Array[String]], k: Int): IndexedSeq[Map[(String, String), Int]] = {
     @tailrec
     def graphFromDoc(seq: Seq[String], currMap: Map[(String, String), Int]): Map[(String, String), Int] = {
       if (seq.isEmpty) currMap
@@ -39,17 +43,6 @@ object GraphGenerator {
       }
     }
     docsOfWords.map(graphFromDoc(_, Map.empty))
-  }
-
-  def compareTwoGraphs(graph1: Map[(String, String), Int], graph2: Map[(String, String), Int]): Double = {
-    val product = graph1.foldLeft(0.0) { case (acc, (vertex, value)) =>
-      acc + (graph2.getOrElse(vertex, 0).toDouble * value)
-    }
-    def len(m: Map[(String, String), Int]): Double = {
-      val sumOfPows = m.values.map(x => math.pow(x.toDouble, 2)).sum
-      math.sqrt(sumOfPows)
-    }
-    1.0 - product/(len(graph1)*len(graph2))
   }
 
   def saveGraphsToFile(file: String, seq: Seq[(Map[(String, String), Int], Int)]): Unit = {

@@ -6,7 +6,9 @@ import scala.language.implicitConversions
 class ScalaDictionaryCLP {
   val javaDictionaryCLP = new DictionaryCLP()
 
-  def indexesOfWord(word: String): List[Int] = javaDictionaryCLP.clp_rec(word)
+  def indicesOfWord(word: String): List[Int] = javaDictionaryCLP.clp_rec(word)
+
+
 
   private implicit def javaListOfStringToScala(l: java.util.List[String]): List[String] = l.asScala.toList
 
