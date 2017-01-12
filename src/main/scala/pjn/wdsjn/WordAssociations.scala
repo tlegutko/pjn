@@ -9,29 +9,52 @@ import scala.collection.mutable
 object Const {
   val inputTextFile = "markov/pap.txt"
   val selectedTextFile = "wdsjn/selected_pap.txt"
-  val wordsToAnalyze = Seq("łóżko", "pościel", "sen", "wygodne")
+  val wordsToAnalyze = Seq("łóżko", "pościel", "sen", "wygodny")
   val textSeparator = "#@#"
   val alpha = 0.66
-  val beta = 0.00002
-  // TODO adjust
+  val beta = 0.0003
   val associationsWindowWidth = 12
+  def fileName(primaryWord: String): String =
+    s"wdsjn/$primaryWord.csv"
 }
 
 object WordAssociations {
 
   def main(args: Array[String]): Unit = {
     val dict = new ScalaDictionaryCLP
+    papToTextsWithWordsToAnalyze(Const.inputTextFile, Const.selectedTextFile, dict, Const.wordsToAnalyze)
     val selectedPap = readSelectedSentences(Const.selectedTextFile)
-    val cooccurences = calculateCooccurrences(selectedPap, dict).foreach(println)
-    val occurences = calculateOccurences(selectedPap, dict).foreach(println)
+    val coOccurrences = calculateCoOccurrences(selectedPap, dict)
+    val occurrences = calculateOccurrences(selectedPap, dict)
     val totalNumOfWords = selectedPap.map(_.size).sum
-
+    val regulationFactor = totalNumOfWords * Const.beta
+    val associationsStrength = coOccurrences.map({
+      case ((i, j), hij) =>
+        val hj = occurrences(j)
+        val rij = {
+          if (hj > regulationFactor) hij / math.pow(hj, Const.alpha)
+          else hij / regulationFactor
+        }
+        ((i, j), rij)
+    })
+    val formattedAssociationsStrength = associationsStrength.groupBy(_._1._1)
+      .mapValues(_.map({ case ((_, secondary), value) => (secondary, value) })
+        .toList.sortWith(_._2 > _._2))
+    formattedAssociationsStrength.foreach { case (primaryWord, associationsList) =>
+      EasyIO.saveToFileWithPrefix[(String, Double)](Const.fileName(primaryWord), associationsList, line => f"${line._2}%.2f,${line._1}")
+    }
   }
 
-  def calculateOccurences(selectedPap: Vector[Vector[String]], dict: ScalaDictionaryCLP): mutable.Map[String, Int] = {
+  def mergeTwoMaps[K, V](z: V, sum: (V, V) => V)(m1: mutable.Map[K, V], m2: mutable.Map[K, V]): mutable.Map[K, V] = {
+    m1 ++ m2.map { case (k, v) => k -> sum(v, m1.getOrElse(k, z)) }
+  }
+  private def mergeTwoCoOccurrenceMaps = mergeTwoMaps[(String, String), Int](0, _ + _) _
+  private def mergeTwoOccurrenceMaps = mergeTwoMaps[String, Int](0, _ + _) _
+
+  def calculateOccurrences(selectedPap: Vector[Vector[String]], dict: ScalaDictionaryCLP): mutable.Map[String, Int] = {
     selectedPap.foldLeft(mutable.Map.empty[String, Int]) {
-      case (acc, sentence) => mergeTwoOccurenceMaps(acc, sentence.foldLeft(mutable.Map.empty[String, Int]) {
-        case (acc2, word) => mergeTwoOccurenceMaps(acc2, {
+      case (acc, sentence) => mergeTwoOccurrenceMaps(acc, sentence.foldLeft(mutable.Map.empty[String, Int]) {
+        case (acc2, word) => mergeTwoOccurrenceMaps(acc2, {
           dict.allBaseForms(word).foldLeft(mutable.Map.empty[String, Int]) {
             case (acc3, baseFormWord) => acc3 + (baseFormWord -> 1)
           }
@@ -40,13 +63,8 @@ object WordAssociations {
     }
   }
 
-  def mergeTwoMaps[K, V](z: V, sum: (V, V) => V)(m1: mutable.Map[K, V], m2: mutable.Map[K, V]): mutable.Map[K, V] = {
-    m1 ++ m2.map { case (k, v) => k -> sum(v, m1.getOrElse(k, z)) }
-  }
-  private def mergeTwoCooccurenceMaps = mergeTwoMaps[(String, String), Int](0, _ + _) _
-  private def mergeTwoOccurenceMaps = mergeTwoMaps[String, Int](0, _ + _) _
 
-  def calculateCooccurrences(selectedPap: Vector[Vector[String]], dict: ScalaDictionaryCLP): mutable.Map[(String, String), Int] = {
+  def calculateCoOccurrences(selectedPap: Vector[Vector[String]], dict: ScalaDictionaryCLP): mutable.Map[(String, String), Int] = {
     def parseSentence(sentence: Vector[String]): mutable.Map[(String, String), Int] = {
       def associations(start: Int, end: Int): mutable.Map[(String, String), Int] = {
         val range = start to end
@@ -66,16 +84,16 @@ object WordAssociations {
       def moveAssociationWindow(acc: mutable.Map[(String, String), Int], left: Int, right: Int): mutable.Map[(String, String), Int] = {
         if (left == right) acc
         else {
-          val newAcc = mergeTwoCooccurenceMaps(acc, associations(left, right))
+          val newAcc = mergeTwoCoOccurrenceMaps(acc, associations(left, right))
           moveAssociationWindow(newAcc, left + 1, math.min(right, sentence.size - 1))
         }
       }
-
-      moveAssociationWindow(mutable.Map.empty[(String, String), Int], 0, Const.associationsWindowWidth)
+      val startingWindowWidth = math.min(sentence.length-1, Const.associationsWindowWidth)
+      moveAssociationWindow(mutable.Map.empty[(String, String), Int], 0, startingWindowWidth)
     }
 
     selectedPap.foldLeft(mutable.Map.empty[(String, String), Int]) {
-      case (acc, sentence) => mergeTwoCooccurenceMaps(acc, parseSentence(sentence))
+      case (acc, sentence) => mergeTwoCoOccurrenceMaps(acc, parseSentence(sentence))
     }
   }
 
