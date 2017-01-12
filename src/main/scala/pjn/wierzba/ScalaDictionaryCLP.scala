@@ -14,6 +14,8 @@ class ScalaDictionaryCLP {
 
   def baseForm(id: Int): List[String] = javaDictionaryCLP.clp_bform(id)
 
+  def allBaseForms(word: String): List[String] = indicesOfWord(word).flatMap(baseForm)
+
   private implicit def javaListOfStringToScala(l: java.util.List[String]): List[String] = l.asScala.toList
 
   private implicit def javaListOfIntsToScala(l: java.util.List[Integer]): List[Int] = l.asScala.map(_.intValue()).toList
