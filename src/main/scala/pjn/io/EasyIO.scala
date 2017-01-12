@@ -39,7 +39,6 @@ object EasyIO {
     readLinesFromUTF8FileWithPrefix(fileName)
       .mkString(" ")
       .split("#\\d{6}")
-//      .map(_.replaceAll("[\\s.,-;%*&@_#+-<>=:()!?\"\'`]+", " "))
       .map(_.replaceAll("[\\s\\d-~!@#$^%&*()_+={}\\[\\]|;:\"'`<,>.?/\\\\]+", " "))
       .map(_.toLowerCase)
   }
