@@ -12,7 +12,7 @@ object Const {
   val wordsToAnalyze = Seq("łóżko", "pościel", "sen", "wygodny")
   val textSeparator = "#@#"
   val alpha = 0.66
-  val beta = 0.00002
+  val beta = 0.0005
   val associationsWindowWidth = 12
   def fileName(primaryWord: String): String =
     s"wdsjn/$primaryWord.csv"
@@ -37,7 +37,6 @@ object WordAssociations {
         }
         ((i, j), rij)
     })
-    associationsStrength.filter(_._1._1 == "wygodny").foreach(println)
     val formattedAssociationsStrength = associationsStrength.groupBy(_._1._1)
       .mapValues(_.map({ case ((_, secondary), value) => (secondary, value) })
         .toList.sortWith(_._2 > _._2))
