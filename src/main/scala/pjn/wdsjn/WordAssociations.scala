@@ -12,7 +12,7 @@ object Const {
   val wordsToAnalyze = Seq("łóżko", "pościel", "sen", "wygodny")
   val textSeparator = "#@#"
   val alpha = 0.66
-  val beta = 0.0003
+  val beta = 0.00002
   val associationsWindowWidth = 12
   def fileName(primaryWord: String): String =
     s"wdsjn/$primaryWord.csv"
@@ -37,12 +37,13 @@ object WordAssociations {
         }
         ((i, j), rij)
     })
+    associationsStrength.filter(_._1._1 == "wygodny").foreach(println)
     val formattedAssociationsStrength = associationsStrength.groupBy(_._1._1)
       .mapValues(_.map({ case ((_, secondary), value) => (secondary, value) })
         .toList.sortWith(_._2 > _._2))
-    formattedAssociationsStrength.foreach { case (primaryWord, associationsList) =>
-      EasyIO.saveToFileWithPrefix[(String, Double)](Const.fileName(primaryWord), associationsList, line => f"${line._2}%.2f,${line._1}")
-    }
+        formattedAssociationsStrength.foreach { case (primaryWord, associationsList) =>
+          EasyIO.saveToFileWithPrefix[(String, Double)](Const.fileName(primaryWord), associationsList, line => f"${line._2}%.2f,${line._1}")
+        }
   }
 
   def mergeTwoMaps[K, V](z: V, sum: (V, V) => V)(m1: mutable.Map[K, V], m2: mutable.Map[K, V]): mutable.Map[K, V] = {
@@ -62,7 +63,6 @@ object WordAssociations {
       })
     }
   }
-
 
   def calculateCoOccurrences(selectedPap: Vector[Vector[String]], dict: ScalaDictionaryCLP): mutable.Map[(String, String), Int] = {
     def parseSentence(sentence: Vector[String]): mutable.Map[(String, String), Int] = {
@@ -85,10 +85,10 @@ object WordAssociations {
         if (left == right) acc
         else {
           val newAcc = mergeTwoCoOccurrenceMaps(acc, associations(left, right))
-          moveAssociationWindow(newAcc, left + 1, math.min(right, sentence.size - 1))
+          moveAssociationWindow(newAcc, left + 1, math.min(right + 1, sentence.size - 1))
         }
       }
-      val startingWindowWidth = math.min(sentence.length-1, Const.associationsWindowWidth)
+      val startingWindowWidth = math.min(sentence.length - 1, Const.associationsWindowWidth)
       moveAssociationWindow(mutable.Map.empty[(String, String), Int], 0, startingWindowWidth)
     }
 
